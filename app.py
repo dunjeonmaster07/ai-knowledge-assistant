@@ -1,17 +1,21 @@
 import os
+import shutil
 import streamlit as st
 from src.chain import ask_question
-from src.config import CHROMA_DIR
+from src.config import CHROMA_DIR, DATA_DIR
 from src.ingest import run_ingestion
 
-if not CHROMA_DIR.exists():
-    with st.spinner("First run — ingesting documents from data/docs/ ..."):
-        run_ingestion()
+st.set_page_config(
+    page_title="AI Knowledge Assistant",
+    page_icon="brain",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
 GREETINGS = {"hi", "hello", "hey", "good morning", "good afternoon", "good evening", "howdy", "sup", "yo"}
 
 with st.sidebar:
-    st.header("Configuration")
+    st.header("1. Enter API Key")
     user_api_key = st.text_input(
         "Groq API Key",
         type="password",
@@ -19,15 +23,50 @@ with st.sidebar:
         help="Get a free key at https://console.groq.com/keys"
     )
     if not user_api_key:
-        st.info("Enter your [Groq API key](https://console.groq.com/keys) to get started. It's free.")
-        st.stop()
+        st.info("Get your free API key at [console.groq.com/keys](https://console.groq.com/keys)")
 
-st.set_page_config(
-    page_title="AI Knowledge Assistant",
-    page_icon="brain",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
+    st.divider()
+    st.header("2. Upload Documents")
+    uploaded_files = st.file_uploader(
+        "Upload PDF files",
+        type=["pdf"],
+        accept_multiple_files=True,
+        help="Upload one or more PDFs to build your knowledge base"
+    )
+
+    if uploaded_files:
+        if st.button("Build Knowledge Base", type="primary", use_container_width=True):
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            for f in DATA_DIR.glob("*.pdf"):
+                f.unlink()
+            if CHROMA_DIR.exists():
+                shutil.rmtree(CHROMA_DIR)
+
+            for uploaded_file in uploaded_files:
+                dest = DATA_DIR / uploaded_file.name
+                with open(dest, "wb") as out:
+                    out.write(uploaded_file.getbuffer())
+
+            with st.spinner(f"Ingesting {len(uploaded_files)} document(s)..."):
+                run_ingestion()
+            st.success(f"Done! {len(uploaded_files)} document(s) ingested. Start asking questions.")
+            st.rerun()
+
+    if CHROMA_DIR.exists():
+        existing_pdfs = list(DATA_DIR.glob("*.pdf"))
+        if existing_pdfs:
+            st.divider()
+            st.caption(f"Knowledge base: {len(existing_pdfs)} document(s) loaded")
+            for pdf in existing_pdfs:
+                st.caption(f"  - {pdf.name}")
+
+if not user_api_key:
+    st.info("Enter your Groq API key in the sidebar to get started.")
+    st.stop()
+
+if not CHROMA_DIR.exists():
+    st.warning("Upload PDF documents in the sidebar to build your knowledge base.")
+    st.stop()
 
 st.markdown("""
 <style>

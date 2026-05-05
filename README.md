@@ -26,7 +26,7 @@ graph LR
 
 ## Features
 
-- **Any-document ingestion** — drop PDFs into `data/docs/`, run ingestion, and start asking
+- **Upload any PDFs** — drag and drop documents through the web UI or place them in `data/docs/` for CLI mode. No code changes needed.
 - **Semantic search** — finds relevant passages by meaning, not just keywords
 - **Grounded answers** — the LLM is instructed to answer ONLY from retrieved context, reducing hallucination
 - **Source citations** — every answer shows which document and page the information came from
@@ -53,7 +53,7 @@ graph LR
 
 
 
-**[Try the live app](https://ai-knowledgge-assistant.streamlit.app/)** — no installation needed, just bring your free Groq API key.
+**[Try the live app](https://ai-knowledgge-assistant.streamlit.app/)** — no installation needed. Enter your free Groq API key, upload your PDFs, and start asking questions.
 
 
 
