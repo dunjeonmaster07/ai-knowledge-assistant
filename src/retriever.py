@@ -24,7 +24,6 @@ def get_retriever(
     )
 
     retriever = vector_store.as_retriever(
-        search_type="similarity_score_threshold",
-        search_kwargs={"k": k, "score_threshold": score_threshold},
+        search_kwargs={"k": k},
     )
     return retriever

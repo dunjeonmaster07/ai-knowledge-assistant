@@ -1,25 +1,7 @@
 import os
 import shutil
 import streamlit as st
-from src.chain import ask_question
 from src.config import CHROMA_DIR, DATA_DIR, REPO_DOCS_DIR, IS_STREAMLIT_CLOUD
-from src.ingest import run_ingestion
-
-
-def seed_sample_docs():
-    """On Streamlit Cloud cold start, copy sample PDFs from repo into writable /tmp."""
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    if not any(DATA_DIR.glob("*.pdf")) and REPO_DOCS_DIR.exists():
-        for pdf in REPO_DOCS_DIR.glob("*.pdf"):
-            shutil.copy2(pdf, DATA_DIR / pdf.name)
-
-
-if IS_STREAMLIT_CLOUD:
-    seed_sample_docs()
-
-if not CHROMA_DIR.exists() and any(DATA_DIR.glob("*.pdf")):
-    with st.spinner("Building knowledge base from sample documents..."):
-        run_ingestion()
 
 st.set_page_config(
     page_title="AI Knowledge Assistant",
@@ -27,6 +9,31 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+from src.chain import ask_question
+from src.ingest import run_ingestion
+
+
+def seed_sample_docs():
+    """On Streamlit Cloud cold start, copy sample PDFs from repo into writable /tmp."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    repo_pdfs = list(REPO_DOCS_DIR.glob("*.pdf")) if REPO_DOCS_DIR.exists() else []
+    local_pdfs = list(DATA_DIR.glob("*.pdf"))
+    if not local_pdfs and repo_pdfs:
+        for pdf in repo_pdfs:
+            shutil.copy2(pdf, DATA_DIR / pdf.name)
+        st.toast(f"Copied {len(repo_pdfs)} sample PDF(s) for first-time setup")
+
+
+if IS_STREAMLIT_CLOUD:
+    seed_sample_docs()
+
+if not CHROMA_DIR.exists():
+    pdfs = list(DATA_DIR.glob("*.pdf"))
+    if pdfs:
+        with st.spinner(f"First run — ingesting {len(pdfs)} document(s)... this takes ~30 seconds"):
+            run_ingestion()
+        st.toast("Knowledge base ready!")
 
 GREETINGS = {"hi", "hello", "hey", "good morning", "good afternoon", "good evening", "howdy", "sup", "yo"}
 
