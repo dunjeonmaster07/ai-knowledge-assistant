@@ -143,6 +143,9 @@ st.markdown("""
     }
     div[data-testid="stChatMessage"] p, div[data-testid="stChatMessage"] li,
     div[data-testid="stChatMessage"] code { color: #e6e6e6 !important; line-height: 1.8 !important; }
+    div[data-testid="stChatMessage"] h1 { font-size: 1.2rem !important; font-weight: 700 !important; margin: 0.8rem 0 0.4rem 0 !important; }
+    div[data-testid="stChatMessage"] h2 { font-size: 1.05rem !important; font-weight: 600 !important; margin: 0.6rem 0 0.3rem 0 !important; }
+    div[data-testid="stChatMessage"] h3 { font-size: 0.95rem !important; font-weight: 600 !important; margin: 0.5rem 0 0.2rem 0 !important; }
 
     .source-card {
         background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
