@@ -84,6 +84,12 @@ with st.sidebar:
             st.caption(f"Knowledge base: {len(existing_pdfs)} document(s) loaded")
             for pdf in existing_pdfs:
                 st.caption(f"  - {pdf.name}")
+            if st.button("Clear Knowledge Base", use_container_width=True):
+                shutil.rmtree(CHROMA_DIR, ignore_errors=True)
+                for f in DATA_DIR.glob("*.pdf"):
+                    f.unlink()
+                st.session_state.messages = []
+                st.rerun()
 
 if not user_api_key:
     st.info("Enter your Groq API key in the sidebar to get started.")
@@ -226,23 +232,42 @@ st.markdown("""
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-if not st.session_state.messages:
+if not st.session_state.messages and CHROMA_DIR.exists():
     st.markdown("""
     <div style="text-align: center; padding: 1.5rem 0 1rem 0;">
-        <p style="color: #8892b0; font-size: 0.95rem; margin-bottom: 0.8rem;">
-            A sample Python tutorial is pre-loaded. Try asking:
+        <p style="color: #8892b0; font-size: 0.95rem; margin-bottom: 0.3rem;">
+            A Python tutorial is pre-loaded. Try these:
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    suggestions = [
-        "What are Python decorators and how do they work?",
-        "Explain list comprehensions with examples",
-        "How does error handling work in Python?",
+    python_suggestions = [
+        "What are Python decorators?",
+        "Explain list comprehensions",
+        "How does error handling work?",
     ]
-    cols = st.columns(len(suggestions))
-    for col, suggestion in zip(cols, suggestions):
+    cols = st.columns(len(python_suggestions))
+    for col, suggestion in zip(cols, python_suggestions):
         if col.button(suggestion, use_container_width=True):
+            st.session_state.pending_question = suggestion
+            st.rerun()
+
+    st.markdown("""
+    <div style="text-align: center; padding: 0.5rem 0 0.3rem 0;">
+        <p style="color: #5a6380; font-size: 0.8rem;">
+            Or upload your own PDFs in the sidebar and ask:
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    generic_suggestions = [
+        "Summarize the key topics",
+        "What are the main concepts?",
+        "List important terms",
+    ]
+    cols2 = st.columns(len(generic_suggestions))
+    for col, suggestion in zip(cols2, generic_suggestions):
+        if col.button(suggestion, use_container_width=True, key=f"gen_{suggestion}"):
             st.session_state.pending_question = suggestion
             st.rerun()
 
