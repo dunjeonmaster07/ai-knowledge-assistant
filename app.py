@@ -22,7 +22,9 @@ with st.sidebar:
         placeholder="gsk_...",
         help="Get a free key at https://console.groq.com/keys"
     )
-    if not user_api_key:
+    if user_api_key:
+        st.success("API key set", icon="✓")
+    else:
         st.info("Get your free API key at [console.groq.com/keys](https://console.groq.com/keys)")
 
     st.divider()
@@ -201,6 +203,26 @@ st.markdown("""
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+if not st.session_state.messages:
+    st.markdown("""
+    <div style="text-align: center; padding: 1.5rem 0 1rem 0;">
+        <p style="color: #8892b0; font-size: 0.95rem; margin-bottom: 0.8rem;">
+            A sample Python tutorial is pre-loaded. Try asking:
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    suggestions = [
+        "What are Python decorators and how do they work?",
+        "Explain list comprehensions with examples",
+        "How does error handling work in Python?",
+    ]
+    cols = st.columns(len(suggestions))
+    for col, suggestion in zip(cols, suggestions):
+        if col.button(suggestion, use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": suggestion})
+            st.rerun()
+
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
@@ -217,7 +239,7 @@ for msg in st.session_state.messages:
                     </div>
                     """, unsafe_allow_html=True)
 
-question = st.chat_input("Ask anything about your uploaded documents...")
+question = st.chat_input("Try: 'What are Python decorators?' or ask anything from your documents...")
 
 if question:
     st.session_state.messages.append({"role": "user", "content": question})
