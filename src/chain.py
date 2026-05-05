@@ -9,6 +9,7 @@ import os
 
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_chroma import Chroma
 
 from src.config import LLM_MODEL
 from src.retriever import get_retriever
@@ -39,14 +40,17 @@ def get_llm(api_key: str | None = None) -> ChatGroq:
     return ChatGroq(model=LLM_MODEL, api_key=api_key) if api_key else ChatGroq(model=LLM_MODEL)
 
 
-def ask_question(question: str, api_key: str | None = None) -> tuple[str | None, list]:
+def ask_question(
+    question: str,
+    api_key: str | None = None,
+    vector_store: Chroma | None = None,
+) -> tuple[str | None, list]:
     """
     Run the full RAG pipeline for a single question.
 
-    Returns:
-        (answer_text, retrieved_docs)
+    vector_store: pass in-memory store on Streamlit Cloud, or None for local disk.
     """
-    retriever = get_retriever()
+    retriever = get_retriever(vector_store=vector_store)
     llm = get_llm(api_key=api_key)
     chain = PROMPT | llm
 
@@ -62,9 +66,7 @@ def ask_question(question: str, api_key: str | None = None) -> tuple[str | None,
 
 
 def ask_question_for_eval(question: str) -> dict:
-    """
-    Same RAG pipeline, but returns the structured dict that RAGAS expects.
-    """
+    """Same RAG pipeline, returns structured dict for RAGAS."""
     retriever = get_retriever()
     llm = get_llm()
     chain = PROMPT | llm

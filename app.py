@@ -1,7 +1,9 @@
 import os
+import tempfile
 import shutil
+from pathlib import Path
 import streamlit as st
-from src.config import CHROMA_DIR, DATA_DIR, REPO_DOCS_DIR, IS_STREAMLIT_CLOUD
+from src.config import CHROMA_DIR, REPO_DOCS_DIR, IS_STREAMLIT_CLOUD
 
 st.set_page_config(
     page_title="AI Knowledge Assistant",
@@ -11,29 +13,41 @@ st.set_page_config(
 )
 
 from src.chain import ask_question
-from src.ingest import run_ingestion
+from src.ingest import load_pdfs, chunk_documents, create_vector_store
 
 
-def seed_sample_docs():
-    """On Streamlit Cloud cold start, copy sample PDFs from repo into writable /tmp."""
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    repo_pdfs = list(REPO_DOCS_DIR.glob("*.pdf")) if REPO_DOCS_DIR.exists() else []
-    local_pdfs = list(DATA_DIR.glob("*.pdf"))
-    if not local_pdfs and repo_pdfs:
-        for pdf in repo_pdfs:
-            shutil.copy2(pdf, DATA_DIR / pdf.name)
-        st.toast(f"Copied {len(repo_pdfs)} sample PDF(s) for first-time setup")
+@st.cache_resource
+def build_sample_knowledge_base():
+    """Build in-memory vector store from sample PDFs shipped with the repo. Cached across reruns."""
+    if REPO_DOCS_DIR.exists() and list(REPO_DOCS_DIR.glob("*.pdf")):
+        docs = load_pdfs(data_dir=REPO_DOCS_DIR)
+        chunks = chunk_documents(docs)
+        return create_vector_store(chunks, persist=False)
+    return None
 
 
-if IS_STREAMLIT_CLOUD:
-    seed_sample_docs()
+def build_from_uploads(uploaded_files) -> object:
+    """Build in-memory vector store from user-uploaded PDF files."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_path = Path(tmp_dir)
+        for f in uploaded_files:
+            dest = tmp_path / f.name
+            with open(dest, "wb") as out:
+                out.write(f.getbuffer())
 
-if not CHROMA_DIR.exists():
-    pdfs = list(DATA_DIR.glob("*.pdf"))
-    if pdfs:
-        with st.spinner(f"First run — ingesting {len(pdfs)} document(s)... this takes ~30 seconds"):
-            run_ingestion()
-        st.toast("Knowledge base ready!")
+        if REPO_DOCS_DIR.exists():
+            for pdf in REPO_DOCS_DIR.glob("*.pdf"):
+                shutil.copy2(pdf, tmp_path / pdf.name)
+
+        docs = load_pdfs(data_dir=tmp_path)
+        chunks = chunk_documents(docs)
+        return create_vector_store(chunks, persist=False)
+
+
+if "vector_store" not in st.session_state:
+    vs = build_sample_knowledge_base()
+    if vs:
+        st.session_state.vector_store = vs
 
 GREETINGS = {"hi", "hello", "hey", "good morning", "good afternoon", "good evening", "howdy", "sup", "yo"}
 
@@ -61,41 +75,33 @@ with st.sidebar:
 
     if uploaded_files:
         if st.button("Build Knowledge Base", type="primary", use_container_width=True):
-            DATA_DIR.mkdir(parents=True, exist_ok=True)
-            if CHROMA_DIR.exists():
-                shutil.rmtree(CHROMA_DIR)
-
-            for uploaded_file in uploaded_files:
-                dest = DATA_DIR / uploaded_file.name
-                with open(dest, "wb") as out:
-                    out.write(uploaded_file.getbuffer())
-
-            total_pdfs = list(DATA_DIR.glob("*.pdf"))
-            with st.spinner(f"Ingesting {len(total_pdfs)} document(s) (sample + uploaded)..."):
-                run_ingestion()
-            st.success(f"Done! {len(total_pdfs)} document(s) ingested. Start asking questions.")
+            with st.spinner(f"Ingesting {len(uploaded_files)} document(s) + sample..."):
+                vs = build_from_uploads(uploaded_files)
+            st.session_state.vector_store = vs
             st.session_state.messages = []
+            st.session_state.uploaded_names = [f.name for f in uploaded_files]
+            st.success(f"Done! Start asking questions.")
             st.rerun()
 
-    if CHROMA_DIR.exists():
-        existing_pdfs = list(DATA_DIR.glob("*.pdf"))
-        if existing_pdfs:
-            st.divider()
-            st.caption(f"Knowledge base: {len(existing_pdfs)} document(s) loaded")
-            for pdf in existing_pdfs:
-                st.caption(f"  - {pdf.name}")
-            if st.button("Clear Knowledge Base", use_container_width=True):
-                shutil.rmtree(CHROMA_DIR, ignore_errors=True)
-                for f in DATA_DIR.glob("*.pdf"):
-                    f.unlink()
-                st.session_state.messages = []
-                st.rerun()
+    if "vector_store" in st.session_state:
+        st.divider()
+        names = st.session_state.get("uploaded_names", ["python-tutorial.pdf (sample)"])
+        st.caption(f"Knowledge base loaded:")
+        for name in names:
+            st.caption(f"  - {name}")
+        if st.button("Reset to Sample Only", use_container_width=True):
+            build_sample_knowledge_base.clear()
+            vs = build_sample_knowledge_base()
+            st.session_state.vector_store = vs
+            st.session_state.messages = []
+            st.session_state.pop("uploaded_names", None)
+            st.rerun()
 
 if not user_api_key:
     st.info("Enter your Groq API key in the sidebar to get started.")
     st.stop()
 
-if not CHROMA_DIR.exists():
+if "vector_store" not in st.session_state:
     st.warning("Upload PDF documents in the sidebar to build your knowledge base.")
     st.stop()
 
@@ -232,7 +238,7 @@ st.markdown("""
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-if not st.session_state.messages and CHROMA_DIR.exists():
+if not st.session_state.messages and "vector_store" in st.session_state:
     st.markdown("""
     <div style="text-align: center; padding: 1.5rem 0 1rem 0;">
         <p style="color: #8892b0; font-size: 0.95rem; margin-bottom: 0.3rem;">
@@ -307,7 +313,11 @@ if question:
             st.session_state.messages.append({"role": "assistant", "content": greeting, "sources": []})
         else:
             with st.spinner("Searching knowledge base..."):
-                answer, docs = ask_question(question, api_key=user_api_key)
+                answer, docs = ask_question(
+                    question,
+                    api_key=user_api_key,
+                    vector_store=st.session_state.get("vector_store"),
+                )
 
             if answer:
                 st.markdown(answer)
