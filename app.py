@@ -23,7 +23,7 @@ with st.sidebar:
         help="Get a free key at https://console.groq.com/keys"
     )
     if user_api_key:
-        st.success("API key set", icon="✓")
+        st.success("API key set")
     else:
         st.info("Get your free API key at [console.groq.com/keys](https://console.groq.com/keys)")
 
