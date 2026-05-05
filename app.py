@@ -62,8 +62,6 @@ with st.sidebar:
     if uploaded_files:
         if st.button("Build Knowledge Base", type="primary", use_container_width=True):
             DATA_DIR.mkdir(parents=True, exist_ok=True)
-            for f in DATA_DIR.glob("*.pdf"):
-                f.unlink()
             if CHROMA_DIR.exists():
                 shutil.rmtree(CHROMA_DIR)
 
@@ -72,9 +70,11 @@ with st.sidebar:
                 with open(dest, "wb") as out:
                     out.write(uploaded_file.getbuffer())
 
-            with st.spinner(f"Ingesting {len(uploaded_files)} document(s)..."):
+            total_pdfs = list(DATA_DIR.glob("*.pdf"))
+            with st.spinner(f"Ingesting {len(total_pdfs)} document(s) (sample + uploaded)..."):
                 run_ingestion()
-            st.success(f"Done! {len(uploaded_files)} document(s) ingested. Start asking questions.")
+            st.success(f"Done! {len(total_pdfs)} document(s) ingested. Start asking questions.")
+            st.session_state.messages = []
             st.rerun()
 
     if CHROMA_DIR.exists():
