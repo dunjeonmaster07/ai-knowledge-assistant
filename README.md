@@ -36,26 +36,29 @@ graph LR
 
 ## Tech Stack
 
-| Component | Technology |
-|---|---|
-| LLM | [Groq](https://groq.com) (Llama 3.3 70B Versatile) |
-| Embeddings | [HuggingFace](https://huggingface.co) (all-MiniLM-L6-v2) |
-| Vector Store | [ChromaDB](https://trychroma.com) |
-| Framework | [LangChain](https://python.langchain.com) |
-| Evaluation | [RAGAS](https://docs.ragas.io) |
-| Observability | [LangSmith](https://smith.langchain.com) |
-| UI | [Streamlit](https://streamlit.io) |
+
+| Component     | Technology                                               |
+| ------------- | -------------------------------------------------------- |
+| LLM           | [Groq](https://groq.com) (Llama 3.3 70B Versatile)       |
+| Embeddings    | [HuggingFace](https://huggingface.co) (all-MiniLM-L6-v2) |
+| Vector Store  | [ChromaDB](https://trychroma.com)                        |
+| Framework     | [LangChain](https://python.langchain.com)                |
+| Evaluation    | [RAGAS](https://docs.ragas.io)                           |
+| Observability | [LangSmith](https://smith.langchain.com)                 |
+| UI            | [Streamlit](https://streamlit.io)                        |
+
 
 ## Demo
 
-<!-- Replace with your actual screenshots and links -->
+
 
 > **Live app:** [Coming soon — deploy to Streamlit Cloud]
 >
 > **Video walkthrough:** [Coming soon — 3-minute YouTube demo]
 
-![App Screenshot](docs/screenshot.png)
-<!-- Take a screenshot of your Streamlit app and save it as docs/screenshot.png -->
+App Screenshot
+
+
 
 ## Quick Start
 
@@ -99,6 +102,7 @@ GROQ_API_KEY=gsk_your_actual_key_here
 ```
 
 **How to get a Groq API key:**
+
 1. Go to [console.groq.com](https://console.groq.com)
 2. Sign up (free)
 3. Go to API Keys → Create API Key
@@ -124,11 +128,13 @@ This reads your PDFs, chunks them, generates embeddings, and stores everything i
 ### 7. Start the app
 
 **Streamlit UI (recommended):**
+
 ```bash
 streamlit run app.py
 ```
 
 **CLI mode:**
+
 ```bash
 python main.py
 ```
@@ -167,13 +173,13 @@ The system includes an automated evaluation pipeline using [RAGAS](https://docs.
 ]
 ```
 
-2. Run the evaluation:
+1. Run the evaluation:
 
 ```bash
 python -m src.evaluate
 ```
 
-3. View the scorecard:
+1. View the scorecard:
 
 ```
 ============================================================
@@ -186,30 +192,34 @@ RAGAS EVALUATION SCORECARD
 ============================================================
 ```
 
-<!-- Replace with your actual scores after running evaluation -->
+
 
 ### What the metrics mean
 
-| Metric | What it measures | Why it matters |
-|---|---|---|
-| **Faithfulness** | Is the answer supported by the retrieved context? | Catches hallucination |
-| **Context Recall** | Did the retriever find the chunks needed to answer? | Catches retrieval failures |
-| **Factual Correctness** | Does the answer match the ground truth? | Catches wrong answers |
-| **Semantic Similarity** | How close is the answer's meaning to the ground truth? | Softer quality measure |
+
+| Metric                  | What it measures                                       | Why it matters             |
+| ----------------------- | ------------------------------------------------------ | -------------------------- |
+| **Faithfulness**        | Is the answer supported by the retrieved context?      | Catches hallucination      |
+| **Context Recall**      | Did the retriever find the chunks needed to answer?    | Catches retrieval failures |
+| **Factual Correctness** | Does the answer match the ground truth?                | Catches wrong answers      |
+| **Semantic Similarity** | How close is the answer's meaning to the ground truth? | Softer quality measure     |
+
 
 ## Configuration
 
 All settings can be overridden via environment variables in `.env`:
 
-| Variable | Default | Description |
-|---|---|---|
-| `GROQ_API_KEY` | (required) | Your Groq API key |
-| `LLM_MODEL` | `llama-3.3-70b-versatile` | Which Groq model to use |
-| `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | HuggingFace embedding model |
-| `CHUNK_SIZE` | `750` | Characters per chunk |
-| `CHUNK_OVERLAP` | `150` | Overlap between chunks |
-| `RETRIEVER_K` | `5` | Number of chunks to retrieve |
-| `SCORE_THRESHOLD` | `0.3` | Minimum similarity score |
+
+| Variable          | Default                   | Description                  |
+| ----------------- | ------------------------- | ---------------------------- |
+| `GROQ_API_KEY`    | (required)                | Your Groq API key            |
+| `LLM_MODEL`       | `llama-3.3-70b-versatile` | Which Groq model to use      |
+| `EMBEDDING_MODEL` | `all-MiniLM-L6-v2`        | HuggingFace embedding model  |
+| `CHUNK_SIZE`      | `750`                     | Characters per chunk         |
+| `CHUNK_OVERLAP`   | `150`                     | Overlap between chunks       |
+| `RETRIEVER_K`     | `5`                       | Number of chunks to retrieve |
+| `SCORE_THRESHOLD` | `0.3`                     | Minimum similarity score     |
+
 
 ## Project Structure
 
@@ -233,7 +243,7 @@ ai-knowledge-assistant/
 
 ## Lessons Learned
 
-<!-- Replace with your actual insights -->
+
 
 - **Chunk size significantly affects retrieval quality.** Too large (2000+) and you retrieve irrelevant noise alongside the answer. Too small (200) and you lose context. 750 with 150 overlap was the sweet spot for technical documentation.
 - **The system prompt matters more than the model.** Explicit grounding instructions ("answer ONLY from the context") dramatically reduced hallucination compared to a generic "be helpful" prompt.
@@ -245,4 +255,4 @@ MIT
 
 ---
 
-Built by [Your Name](https://github.com/YOUR_USERNAME) as part of an AI Solutions Engineer upskilling journey.
+Built by [Ankit Chaudhary!](https://github.com/YOUR_USERNAME)
