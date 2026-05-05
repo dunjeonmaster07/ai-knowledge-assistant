@@ -53,11 +53,7 @@ graph LR
 
 
 
-> **Live app:** [Coming soon — deploy to Streamlit Cloud]
->
-> **Video walkthrough:** [Coming soon — 3-minute YouTube demo]
-
-App Screenshot
+**[Try the live app](https://ai-knowledgge-assistant.streamlit.app/)** — no installation needed, just bring your free Groq API key.
 
 
 
