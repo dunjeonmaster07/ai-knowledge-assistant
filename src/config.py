@@ -12,9 +12,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = PROJECT_ROOT / "data" / "docs"
+
+IS_STREAMLIT_CLOUD = os.getenv("STREAMLIT_SHARING_MODE") or os.path.exists("/mount/src")
+
+if IS_STREAMLIT_CLOUD:
+    _WRITABLE_ROOT = Path("/tmp/rag_data")
+    DATA_DIR = _WRITABLE_ROOT / "docs"
+    CHROMA_DIR = _WRITABLE_ROOT / "chroma_db"
+else:
+    DATA_DIR = PROJECT_ROOT / "data" / "docs"
+    CHROMA_DIR = PROJECT_ROOT / "chroma_db"
+
 EVAL_DIR = PROJECT_ROOT / "data" / "eval"
-CHROMA_DIR = PROJECT_ROOT / "chroma_db"
 
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
 LLM_MODEL = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
