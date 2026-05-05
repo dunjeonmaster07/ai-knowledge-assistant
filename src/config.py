@@ -15,6 +15,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 IS_STREAMLIT_CLOUD = os.getenv("STREAMLIT_SHARING_MODE") or os.path.exists("/mount/src")
 
+REPO_DOCS_DIR = PROJECT_ROOT / "data" / "docs"
+
 if IS_STREAMLIT_CLOUD:
     _WRITABLE_ROOT = Path("/tmp/rag_data")
     DATA_DIR = _WRITABLE_ROOT / "docs"

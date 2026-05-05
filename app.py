@@ -2,8 +2,24 @@ import os
 import shutil
 import streamlit as st
 from src.chain import ask_question
-from src.config import CHROMA_DIR, DATA_DIR
+from src.config import CHROMA_DIR, DATA_DIR, REPO_DOCS_DIR, IS_STREAMLIT_CLOUD
 from src.ingest import run_ingestion
+
+
+def seed_sample_docs():
+    """On Streamlit Cloud cold start, copy sample PDFs from repo into writable /tmp."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if not any(DATA_DIR.glob("*.pdf")) and REPO_DOCS_DIR.exists():
+        for pdf in REPO_DOCS_DIR.glob("*.pdf"):
+            shutil.copy2(pdf, DATA_DIR / pdf.name)
+
+
+if IS_STREAMLIT_CLOUD:
+    seed_sample_docs()
+
+if not CHROMA_DIR.exists() and any(DATA_DIR.glob("*.pdf")):
+    with st.spinner("Building knowledge base from sample documents..."):
+        run_ingestion()
 
 st.set_page_config(
     page_title="AI Knowledge Assistant",
