@@ -220,7 +220,7 @@ if not st.session_state.messages:
     cols = st.columns(len(suggestions))
     for col, suggestion in zip(cols, suggestions):
         if col.button(suggestion, use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": suggestion})
+            st.session_state.pending_question = suggestion
             st.rerun()
 
 for msg in st.session_state.messages:
@@ -240,6 +240,9 @@ for msg in st.session_state.messages:
                     """, unsafe_allow_html=True)
 
 question = st.chat_input("Try: 'What are Python decorators?' or ask anything from your documents...")
+
+if "pending_question" in st.session_state:
+    question = st.session_state.pop("pending_question")
 
 if question:
     st.session_state.messages.append({"role": "user", "content": question})
