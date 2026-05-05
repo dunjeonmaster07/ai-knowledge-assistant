@@ -10,6 +10,18 @@ if not CHROMA_DIR.exists():
 
 GREETINGS = {"hi", "hello", "hey", "good morning", "good afternoon", "good evening", "howdy", "sup", "yo"}
 
+with st.sidebar:
+    st.header("Configuration")
+    user_api_key = st.text_input(
+        "Groq API Key",
+        type="password",
+        placeholder="gsk_...",
+        help="Get a free key at https://console.groq.com/keys"
+    )
+    if not user_api_key:
+        st.info("Enter your [Groq API key](https://console.groq.com/keys) to get started. It's free.")
+        st.stop()
+
 st.set_page_config(
     page_title="AI Knowledge Assistant",
     page_icon="brain",
@@ -180,7 +192,7 @@ if question:
             st.session_state.messages.append({"role": "assistant", "content": greeting, "sources": []})
         else:
             with st.spinner("Searching knowledge base..."):
-                answer, docs = ask_question(question)
+                answer, docs = ask_question(question, api_key=user_api_key)
 
             if answer:
                 st.markdown(answer)

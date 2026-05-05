@@ -32,6 +32,7 @@ graph LR
 - **Source citations** — every answer shows which document and page the information came from
 - **RAGAS evaluation** — automated quality scoring (faithfulness, context recall, factual correctness, semantic similarity)
 - **Full observability** — every query traced end-to-end in LangSmith
+- **Bring your own key** — the deployed app asks users for their own Groq API key (no shared keys, no cost for the host)
 - **Configurable** — chunk size, retrieval depth, score threshold, model selection — all via `.env`
 
 ## Tech Stack
@@ -67,6 +68,8 @@ App Screenshot
 - Python 3.11+
 - A free [Groq API key](https://console.groq.com/keys) (takes 30 seconds to get)
 - (Optional) A free [LangSmith API key](https://smith.langchain.com) for tracing
+
+> **Using the deployed app?** You don't need to install anything. Just visit the live link, enter your Groq API key in the sidebar, and start asking questions. Your key is never stored — it's used only for your session.
 
 ### 1. Clone the repo
 

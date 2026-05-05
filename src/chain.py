@@ -32,11 +32,11 @@ Question: {question}"""
 )
 
 
-def get_llm() -> ChatGroq:
-    return ChatGroq(model=LLM_MODEL)
+def get_llm(api_key: str | None = None) -> ChatGroq:
+    return ChatGroq(model=LLM_MODEL, api_key=api_key) if api_key else ChatGroq(model=LLM_MODEL)
 
 
-def ask_question(question: str) -> tuple[str | None, list]:
+def ask_question(question: str, api_key: str | None = None) -> tuple[str | None, list]:
     """
     Run the full RAG pipeline for a single question.
 
@@ -44,7 +44,7 @@ def ask_question(question: str) -> tuple[str | None, list]:
         (answer_text, retrieved_docs)
     """
     retriever = get_retriever()
-    llm = get_llm()
+    llm = get_llm(api_key=api_key)
     chain = PROMPT | llm
 
     retrieved_docs = retriever.invoke(question)
